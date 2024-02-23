@@ -4,12 +4,19 @@ const mongoose = require("mongoose");
 const Product = require("./models/productModel");
 const credent = require("./signup/signupModel");
 const cors = require("cors");
-const bcrypt = require("bcryptjs");
-const jwt = require("jsonwebtoken");
+const bcrypt = require("bcryptjs"); //used for hashing password
+const jwt = require("jsonwebtoken"); //used for authantication
 const app = express(); //specification of express framework
+
+const bodyParser = require("body-parser");
+const nodemailer = require("nodemailer");
+
 app.use(express.json()); //middleware
 app.use(express.urlencoded({ extended: false })); //multi part form middleware
 app.use(cors());
+
+
+
 
 // some outhentiction
 const JWT_SECRET = "your_secret_key";
@@ -33,16 +40,58 @@ app.get("/blog", (req, res) => {
   res.send("hello blog");
 });
 
-//posting product
+//posting contact
+// app.post("/contact", async (req, res) => {
+//   try {
+//     const product = await Product.create(req.body);
+//     res.status(200).json(product);
+//   } catch (error) {
+//     console.log(error.message);
+//     res.status(500).json({ message: error.message });
+//   }
+// });
+
+
+// Create a Nodemailer transporter
+const transporter = nodemailer.createTransport({
+  service: "Gmail",
+  auth: {
+    user: "dushimiyimanaelisa@gmail.com",
+    pass: "dushdush",
+  },
+});
+
+// Contact form route
 app.post("/contact", async (req, res) => {
   try {
+    // Save the submitted data to MongoDB
     const product = await Product.create(req.body);
+
+    // Email notification configuration
+    const mailOptions = {
+      from: "dushimiyimanaelisa@gmail.com",
+      to: "dushimiyimanaelisa@gmail.com", // Replace with the email where you want to receive notifications
+      subject: "New Contact Form Submission",
+      text: "A new contact form submission has been received.",
+    };
+
+    // Send email notification
+    transporter.sendMail(mailOptions, (error, info) => {
+      if (error) {
+        console.log("Error sending email:", error.message);
+      } else {
+        console.log("Email sent:", info.response);
+      }
+    });
+
     res.status(200).json(product);
   } catch (error) {
     console.log(error.message);
     res.status(500).json({ message: error.message });
   }
 });
+
+
 //get all contact
 app.get("/getcontact", async (req, res) => {
   try {
@@ -97,17 +146,6 @@ app.delete("/deletecontact/:id", async (req, res) => {
     res.status(500).json({ message: error.message });
   }
 });
-
-
-// app.post("/signup", async (req, res) => {
-//   try {
-//     const authe = await credent.create(req.body);
-//     res.status(200).json(authe);
-//   } catch (error) {
-//     console.log(error.message);
-//     res.status(500).json({ message: error.message });
-//   }
-// });
 
 //session for the sign up
 
