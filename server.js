@@ -149,23 +149,6 @@ app.delete("/deletecontact/:id", async (req, res) => {
 
 //session for the sign up
 
-app.post("/signup", async (req, res) => {
-  try {
-    const { name, email, phone, password } = req.body;
-    const hashedPassword = await bcrypt.hash(password, 10);
-    const newUser = new credent({
-      name,
-      email,
-      phone,
-      password: hashedPassword,
-    });
-    await newUser.save();
-    res.status(200).json({ message: "User registered successfully" });
-  } catch (error) {
-    console.log(error.message);
-    res.status(500).json({ message: error.message });
-  }
-});
 app.post("/login", async (req, res) => {
   try {
     const { email, password } = req.body;
@@ -175,7 +158,8 @@ app.post("/login", async (req, res) => {
     }
     const isMatch = await bcrypt.compare(password, user.password);
     if (!isMatch) {
-      throw new Error("Invalid password");
+      // Notify the user of invalid credentials
+      return res.status(401).json({ message: "Invalid credentials" });
     }
     const token = jwt.sign({ id: user._id }, JWT_SECRET);
     res.status(200).json({ token });
@@ -184,8 +168,6 @@ app.post("/login", async (req, res) => {
     res.status(500).json({ message: error.message });
   }
 });
-
-
 mongoose.set("strictQuery", false);
 mongoose
   .connect(
