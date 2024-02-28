@@ -148,7 +148,45 @@ app.delete("/deletecontact/:id", async (req, res) => {
 });
 
 //session for the sign up
+app.post("/signup", async (req, res) => {
+  try {
+    const { name, email, phone, password } = req.body;
+    const hashedPassword = await bcrypt.hash(password, 10);
+    const newUser = new credent({
+      name,
+      email,
+      phone,
+      password: hashedPassword,
+    });
+    await newUser.save();
+    res.status(200).json({ message: "User registered successfully" });
+  } catch (error) {
+    console.log(error.message);
+    res.status(500).json({ message: error.message });
+  }
+});
+//admin sign up
+// Endpoint for admin signup
+app.post("/admin/signup", async (req, res) => {
+  try {
+    const { name, email, phone, password } = req.body;
+    const hashedPassword = await bcrypt.hash(password, 10);
+    const newUser = new credent({
+      name,
+      email,
+      phone,
+      password: hashedPassword,
+      role: "admin", // Assigning the role as "admin" during admin signup
+    });
+    await newUser.save();
+    res.status(200).json({ message: "Admin registered successfully" });
+  } catch (error) {
+    console.log(error.message);
+    res.status(500).json({ message: error.message });
+  }
+});
 
+// Endpoint for regular users and admins to login
 app.post("/login", async (req, res) => {
   try {
     const { email, password } = req.body;
@@ -168,6 +206,67 @@ app.post("/login", async (req, res) => {
     res.status(500).json({ message: error.message });
   }
 });
+
+//end points for user and admin
+// Endpoint for regular users to perform actions like viewing their profile or updating their information
+app.get("/user/profile", authenticateToken, async (req, res) => {
+  try {
+    // Extract user ID from token
+    const userId = req.user.id;
+
+    // Fetch user details from the database using the user ID
+    const user = await credent.findById(userId);
+
+    // Return user details
+    res.status(200).json({ user });
+  } catch (error) {
+    console.log(error.message);
+    res.status(500).json({ message: "Server Error" });
+  }
+});
+
+// Endpoint for admins to perform actions like viewing all users or updating user information
+app.get("/admin/users", authenticateToken, async (req, res) => {
+  try {
+    // Check if the user making the request is an admin
+    if (req.user.role !== "admin") {
+      throw new Error("Unauthorized access");
+    }
+
+    // Fetch all users from the database
+    const users = await credent.find();
+
+    // Return the list of users
+    res.status(200).json({ users });
+  } catch (error) {
+    console.log(error.message);
+    res.status(403).json({ message: error.message });
+  }
+});
+
+// Example endpoint for admin to delete a user
+app.delete("/admin/users/:userId", authenticateToken, async (req, res) => {
+  try {
+    // Check if the user making the request is an admin
+    if (req.user.role !== "admin") {
+      throw new Error("Unauthorized access");
+    }
+
+    // Extract userId from the request parameters
+    const userId = req.params.userId;
+
+    // Find the user by ID and delete them from the database
+    await credent.findByIdAndDelete(userId);
+
+    // Return success message
+    res.status(200).json({ message: "User deleted successfully" });
+  } catch (error) {
+    console.log(error.message);
+    res.status(403).json({ message: error.message });
+  }
+});
+
+//end points
 mongoose.set("strictQuery", false);
 mongoose
   .connect(
