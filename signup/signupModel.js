@@ -17,6 +17,11 @@ const signschema = mongoose.Schema(
       type: String,
       required: true,
     },
+    role: {
+      type: String,
+      enum: ["user", "admin"], // role can be either 'user' or 'admin'
+      default: "user", // default role is 'user'
+    },
   },
   {
     timestamps: true,

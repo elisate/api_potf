@@ -147,39 +147,27 @@ app.delete("/deletecontact/:id", async (req, res) => {
   }
 });
 
-//session for the sign up
+//session for the fresh sign up
 app.post("/signup", async (req, res) => {
   try {
-    const { name, email, phone, password } = req.body;
+    const { name, email, phone, password,role } = req.body;
+
+    // Check if the email already exists in the database
+    const existingUser = await credent.findOne({ email });
+    if (existingUser) {
+      return res.status(400).json({ message: "user already registered" });
+    }
+
     const hashedPassword = await bcrypt.hash(password, 10);
     const newUser = new credent({
       name,
       email,
       phone,
       password: hashedPassword,
+      role: role || "user",
     });
     await newUser.save();
     res.status(200).json({ message: "User registered successfully" });
-  } catch (error) {
-    console.log(error.message);
-    res.status(500).json({ message: error.message });
-  }
-});
-//admin sign up
-// Endpoint for admin signup
-app.post("/admin/signup", async (req, res) => {
-  try {
-    const { name, email, phone, password } = req.body;
-    const hashedPassword = await bcrypt.hash(password, 10);
-    const newUser = new credent({
-      name,
-      email,
-      phone,
-      password: hashedPassword,
-      role: "admin", // Assigning the role as "admin" during admin signup
-    });
-    await newUser.save();
-    res.status(200).json({ message: "Admin registered successfully" });
   } catch (error) {
     console.log(error.message);
     res.status(500).json({ message: error.message });
@@ -200,12 +188,19 @@ app.post("/login", async (req, res) => {
       return res.status(401).json({ message: "Invalid credentials" });
     }
     const token = jwt.sign({ id: user._id }, JWT_SECRET);
-    res.status(200).json({ token });
+    res.status(200).json({
+      token,
+      email: user.email,
+      name: user.name,
+      role: user.role,
+      message: "User logged in successfully",
+    });
   } catch (error) {
     console.log(error.message);
     res.status(500).json({ message: error.message });
   }
 });
+
 
 //end points for user and admin
 // Endpoint for regular users to perform actions like viewing their profile or updating their information
@@ -226,21 +221,34 @@ app.get("/user/profile", authenticateToken, async (req, res) => {
 });
 
 // Endpoint for admins to perform actions like viewing all users or updating user information
-app.get("/admin/users", authenticateToken, async (req, res) => {
+// app.get("/admin/users", authenticateToken, async (req, res) => {
+//   try {
+//     // Check if the user making the request is an admin
+//     if (req.user.role !== "admin") {
+//       throw new Error("Unauthorized access");
+//     }
+
+//     // Fetch all users from the database
+//     const users = await credent.find();
+
+//     // Return the list of users
+//     res.status(200).json({ users });
+//   } catch (error) {
+//     console.log(error.message);
+//     res.status(403).json({ message: error.message });
+//   }
+// });
+
+//------------------------------------------------------------
+//get users
+
+app.get("/users", async (req, res) => {
   try {
-    // Check if the user making the request is an admin
-    if (req.user.role !== "admin") {
-      throw new Error("Unauthorized access");
-    }
-
-    // Fetch all users from the database
-    const users = await credent.find();
-
-    // Return the list of users
-    res.status(200).json({ users });
+    const crede = await credent.find({});
+    res.status(200).json(crede);
   } catch (error) {
     console.log(error.message);
-    res.status(403).json({ message: error.message });
+    res.status(500).json({ message: error.message });
   }
 });
 
@@ -266,7 +274,7 @@ app.delete("/admin/users/:userId", authenticateToken, async (req, res) => {
   }
 });
 
-//end points
+//connections to mongle db
 mongoose.set("strictQuery", false);
 mongoose
   .connect(
