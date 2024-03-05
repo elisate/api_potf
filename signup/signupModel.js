@@ -5,6 +5,10 @@ const signschema = mongoose.Schema(
       type: String,
       required: [true, "please entercontact name"],
     },
+    lastname: {
+      type: String,
+      required: [true, "please entercontact name"],
+    },
     email: {
       type: String,
       required: true,

@@ -150,7 +150,7 @@ app.delete("/deletecontact/:id", async (req, res) => {
 //session for the fresh sign up
 app.post("/signup", async (req, res) => {
   try {
-    const { name, email, phone, password,role } = req.body;
+    const { name,lastname, email, phone, password,role } = req.body;
 
     // Check if the email already exists in the database
     const existingUser = await credent.findOne({ email });
@@ -161,6 +161,7 @@ app.post("/signup", async (req, res) => {
     const hashedPassword = await bcrypt.hash(password, 10);
     const newUser = new credent({
       name,
+      lastname,
       email,
       phone,
       password: hashedPassword,
@@ -192,6 +193,7 @@ app.post("/login", async (req, res) => {
       token,
       email: user.email,
       name: user.name,
+      lastname:user.lastname,
       role: user.role,
       message: "User logged in successfully",
     });
