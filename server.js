@@ -3,6 +3,7 @@ const mongoose = require("mongoose");
 
 const Product = require("./models/productModel");
 const credent = require("./signup/signupModel");
+const Blg =require("./models/blogs-poster/blogs");
 const cors = require("cors");
 const bcrypt = require("bcryptjs"); //used for hashing password
 const jwt = require("jsonwebtoken"); //used for authantication
@@ -14,9 +15,55 @@ const nodemailer = require("nodemailer");
 app.use(express.json()); //middleware
 app.use(express.urlencoded({ extended: false })); //multi part form middleware
 app.use(cors());
+var multer = require("multer");//multer Middle ware for picture
+var fs = require("fs");
 
+// console.log("------BLOG DEAL------")
+function ensureDir(directory) {
+  return new Promise(function (resolve, reject) {
+    fs.access(directory, fs.constants.F_OK, function (err) {
+      if (err) {
+        fs.mkdir(directory, { recursive: true }, function (err) {
+          if (err) {
+            console.log("errors", err);
+            reject(err);
+          } else {
+            resolve();
+          }
+        });
+      } else {
+        resolve();
+      }
+    });
+  });
+}
 
+var storage = multer.diskStorage({
+  destination: function (req, file, cb) {
+    var dir = "images_container";
+    ensureDir(dir)
+      .then(function () {
+        cb(null, "images_container");
+      })
+      .catch(function (err) {
+        console.log("errors", err);
+        cb(err);
+      });
+  },
+  filename: function (req, file, cb) {
+    cb(null, Date.now() + "_" + file.originalname);
+  },
+});
 
+var upload = multer({ storage: storage });
+
+var uploaded = upload.fields([
+  { name: "picture", maxCount: 1 },
+  { name: "image", maxCount: 4 },
+  { name: "images", maxCount: 20 },
+]);
+
+//-----END OF BLOG
 
 // some outhentiction
 const JWT_SECRET = "your_secret_key";
@@ -40,16 +87,55 @@ app.get("/blog", (req, res) => {
   res.send("hello blog");
 });
 
-//posting contact
-// app.post("/contact", async (req, res) => {
-//   try {
-//     const product = await Product.create(req.body);
-//     res.status(200).json(product);
-//   } catch (error) {
-//     console.log(error.message);
-//     res.status(500).json({ message: error.message });
-//   }
-// });
+const cloudinary = require("cloudinary").v2;
+
+
+
+cloudinary.config({
+  cloud_name: "deaqa3zvd",
+  api_key: "228359843523968",
+  api_secret: "dGNzJXl_7LjtPyveFl16-3KGIyA",
+});
+
+
+// Modify the /blogposting route
+app.post("/blogposting",uploaded,async (req, res) => {
+  try {
+    // Upload image to Cloudinary
+    const result = await cloudinary.uploader.upload(req.files.image[0].path)
+      ;
+
+    // Retrieve data from the request body
+    const { date, title, content } = req.body;
+    const image = result.secure_url; // Get the secure image URL from Cloudinary
+
+    // Create a new blog post object
+    const newBlogPost = await Blg.create({
+      date,
+      title,
+      content,
+      image,
+    });
+
+    res.status(200).json(newBlogPost);
+  } catch (error) {
+    console.log(error.message);
+    res.status(500).json({ message: error.message });
+  }
+});
+
+//getting plogs
+
+app.get("/getblogs", async (req, res) => {
+  try {
+    const manyblogs = await Blg.find({});
+    res.status(200).json(manyblogs);
+  } catch (error) {
+    console.log(error.message);
+    res.status(500).json({ message: error.message });
+  }
+});
+
 
 
 // Create a Nodemailer transporter
