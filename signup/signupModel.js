@@ -26,6 +26,17 @@ const signschema = mongoose.Schema(
       enum: ["user", "admin"], // role can be either 'user' or 'admin'
       default: "user", // default role is 'user'
     },
+
+    otp: {
+      type: String,
+      required: false,
+    },
+    verified: { type: Boolean, required: false },
+    newPassword: {
+      type: String,
+      required: false,
+      select: false, // Do not include this field in query results
+    },
   },
   {
     timestamps: true,

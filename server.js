@@ -8,15 +8,22 @@ const cors = require("cors");
 const bcrypt = require("bcryptjs"); //used for hashing password
 const jwt = require("jsonwebtoken"); //used for authantication
 const app = express(); //specification of express framework
-
+ const crypto=require("crypto");
 const bodyParser = require("body-parser");
 const nodemailer = require("nodemailer");
+const sendEmail = require("./utils/sendemal");
+sendEmail(
+  "infodtechel@gmail.com",
+  "subject",
+  "fhusdgvksfvbhdsgvbsdhbvdjbvkgfbvjhdbvhjdbvjhdbvjdhv"
+);
 
 app.use(express.json()); //middleware
 app.use(express.urlencoded({ extended: false })); //multi part form middleware
 app.use(cors());
 var multer = require("multer");//multer Middle ware for picture
 var fs = require("fs");
+
 
 // console.log("------BLOG DEAL------")
 function ensureDir(directory) {
@@ -64,7 +71,6 @@ var uploaded = upload.fields([
 ]);
 
 //-----END OF BLOG
-
 // some outhentiction
 const JWT_SECRET = "your_secret_key";
 
@@ -138,37 +144,31 @@ app.get("/getblogs", async (req, res) => {
 
 
 
-// Create a Nodemailer transporter
-const transporter = nodemailer.createTransport({
-  service: "Gmail",
-  auth: {
-    user: "dushimiyimanaelisa@gmail.com",
-    pass: "dushdush",
-  },
-});
+// posting the contact
+// app.post('/postcontact',async(req,res)=>{
+//   try {
+//     const product = await Product.create(req.body);
+//     res.status(200).json(product);
+//   } catch (error) {
+//     console.log(error.message);
+//     res.status(500).json({ message: error.message });
+//   }
+// })
 
-// Contact form route
-app.post("/contact", async (req, res) => {
+
+app.post("/postcontact", async (req, res) => {
   try {
-    // Save the submitted data to MongoDB
     const product = await Product.create(req.body);
 
-    // Email notification configuration
-    const mailOptions = {
-      from: "dushimiyimanaelisa@gmail.com",
-      to: "dushimiyimanaelisa@gmail.com", // Replace with the email where you want to receive notifications
-      subject: "New Contact Form Submission",
-      text: "A new contact form submission has been received.",
-    };
+    // Extract email from the posted contact data
+    const { email } = req.body;
 
-    // Send email notification
-    transporter.sendMail(mailOptions, (error, info) => {
-      if (error) {
-        console.log("Error sending email:", error.message);
-      } else {
-        console.log("Email sent:", info.response);
-      }
-    });
+    // Send email to the extracted email address
+    sendEmail(
+      email,
+      "Contact Posted",
+      "Your contact has been successfully posted."
+    );
 
     res.status(200).json(product);
   } catch (error) {
@@ -188,6 +188,8 @@ app.get("/getcontact", async (req, res) => {
     res.status(500).json({ message: error.message });
   }
 });
+
+
 //get contact by id
 app.get("/getcontact/:id", async (req, res) => {
   try {
@@ -236,12 +238,12 @@ app.delete("/deletecontact/:id", async (req, res) => {
 //session for the fresh sign up
 app.post("/signup", async (req, res) => {
   try {
-    const { name,lastname, email, phone, password,role } = req.body;
+    const { name, lastname, email, phone, password, role } = req.body;
 
     // Check if the email already exists in the database
     const existingUser = await credent.findOne({ email });
     if (existingUser) {
-      return res.status(400).json({ message: "user already registered" });
+      return res.status(400).json({ message: "User already registered" });
     }
 
     const hashedPassword = await bcrypt.hash(password, 10);
@@ -254,6 +256,14 @@ app.post("/signup", async (req, res) => {
       role: role || "user",
     });
     await newUser.save();
+
+    // Send email to the user
+    await sendEmail(
+      email,
+      "Welcome to Our Platform",
+      "You have registered successfully."
+    );
+
     res.status(200).json({ message: "User registered successfully" });
   } catch (error) {
     console.log(error.message);
@@ -261,11 +271,14 @@ app.post("/signup", async (req, res) => {
   }
 });
 
+
 // Endpoint for regular users and admins to login
 app.post("/login", async (req, res) => {
   try {
     const { email, password } = req.body;
     const user = await credent.findOne({ email });
+    console.log("the   creent logeed in user  emailis",user.email)
+    sendEmail(user.email,"subject","You have logged in Sucessfully")
     if (!user) {
       throw new Error("User not found");
     }
@@ -308,27 +321,7 @@ app.get("/user/profile", authenticateToken, async (req, res) => {
   }
 });
 
-// Endpoint for admins to perform actions like viewing all users or updating user information
-// app.get("/admin/users", authenticateToken, async (req, res) => {
-//   try {
-//     // Check if the user making the request is an admin
-//     if (req.user.role !== "admin") {
-//       throw new Error("Unauthorized access");
-//     }
 
-//     // Fetch all users from the database
-//     const users = await credent.find();
-
-//     // Return the list of users
-//     res.status(200).json({ users });
-//   } catch (error) {
-//     console.log(error.message);
-//     res.status(403).json({ message: error.message });
-//   }
-// });
-
-//------------------------------------------------------------
-//get users
 
 app.get("/users", async (req, res) => {
   try {
@@ -361,6 +354,108 @@ app.delete("/admin/users/:userId", authenticateToken, async (req, res) => {
     res.status(403).json({ message: error.message });
   }
 });
+//otp generation
+
+ const generateOTP = (expiryMinutes = 5) => {
+  const otp = crypto.randomInt(100000, 999999);
+  const expiryTime = new Date();
+  expiryTime.setMinutes(expiryTime.getMinutes() + expiryMinutes);
+  console.log("-------", otp);
+  return {
+    code: otp.toString(),
+    expiresAt: expiryTime,
+  };
+
+};
+generateOTP();
+// Endpoint for sending OTP to the user's email
+app.post('/send-otp', async (req, res) => {
+  const { email } = req.body;
+  let otp=generateOTP().code;
+  const expiresAt=generateOTP().expiresAt;
+
+
+  try {
+    // Check if the user exists in the database
+    const user = await credent.findOne({ email });
+
+    if (!user) {
+      return res.status(404).json({ message: 'User not found.' });
+    }
+
+    // Generate OTP
+  
+    console.log("Generated OTP:", otp); // Log the generated OTP
+
+    // Update user's OTP field in the database
+    user.otp = otp;
+    user.verified=false;
+    await user.save();
+
+    // Send the OTP to the user's email (implement your email sending logic here)
+    sendEmail(
+      email,
+      'OTP for Password Reset',
+      `Your OTP for password reset is: ${otp}`
+    );
+
+    res.status(200).json({ message: 'OTP sent successfully.' });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: 'Internal Server Error' });
+  }
+});
+
+// Endpoint for verifying OTP and updating password
+app.post("/verify-otp", async (req, res) => {
+  const { email, otp, newPassword } = req.body;
+
+  try {
+    // Find the user in the database
+    const user = await credent.findOne({ email });
+
+    // Check if the user exists
+    if (!user) {
+      return res.status(404).json({ message: "User not found." });
+    }
+
+    // Check if the OTP matches
+    if (user.otp !== otp) {
+      return res.status(400).json({ message: "Invalid OTP." });
+    }
+
+    // Check if the OTP has expired
+    if (user.expiresAt < new Date()) {
+      return res.status(400).json({ message: "OTP has expired." });
+    }
+
+    // Hash the new password
+    const hashedPassword = await bcrypt.hash(newPassword, 10);
+
+    // Update user's password and mark as verified
+    user.password = hashedPassword;
+    user.verified = true;
+    user.otp = null; // Clear the OTP field
+    user.expiresAt = null; // Clear the expiration time
+    await user.save();
+
+    // Send email to the user
+    await sendEmail(
+      email,
+      "Password Updated Successfully",
+      `Your password has been successfully updated. Your new password is: ${newPassword}`
+    );
+
+    res.status(200).json({ message: "Password updated successfully." });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: "Internal Server Error" });
+  }
+});
+
+
+
+
 
 //connections to mongle db
 mongoose.set("strictQuery", false);
