@@ -278,7 +278,7 @@ app.post("/login", async (req, res) => {
     const { email, password } = req.body;
     const user = await credent.findOne({ email });
     console.log("the   creent logeed in user  emailis",user.email)
-    sendEmail(user.email,"subject","You have logged in Sucessfully")
+    // sendEmail(user.email,"subject","You have logged in Sucessfully")
     if (!user) {
       throw new Error("User not found");
     }
