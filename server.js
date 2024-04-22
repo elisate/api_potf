@@ -16,7 +16,7 @@ const sendEmail = require("./utils/sendemal");
 sendEmail(
   "infodtechel@gmail.com",
   "subject",
-  // "fhusdgvksfvbhdsgvbsdhbvdjbvkgfbvjhdbvhjdbvjhdbvjdhv"
+  "Dear Admin Elisa New Activity Done On Your Website"
 );
 
 app.use(express.json()); //middleware
