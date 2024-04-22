@@ -11,11 +11,12 @@ const app = express(); //specification of express framework
  const crypto=require("crypto");
 const bodyParser = require("body-parser");
 const nodemailer = require("nodemailer");
+const session = require("express-session");//middle ware for session storing data
 const sendEmail = require("./utils/sendemal");
 sendEmail(
   "infodtechel@gmail.com",
   "subject",
-  "fhusdgvksfvbhdsgvbsdhbvdjbvkgfbvjhdbvhjdbvjhdbvjdhv"
+  // "fhusdgvksfvbhdsgvbsdhbvdjbvkgfbvjhdbvhjdbvjhdbvjdhv"
 );
 
 app.use(express.json()); //middleware
@@ -25,6 +26,15 @@ var multer = require("multer");//multer Middle ware for picture
 var fs = require("fs");
 
 
+//session configuration
+app.use(
+  session({
+    secret: "your-secret-key",
+    resave: false,
+    saveUninitialized: true,
+    cookie: { secure: false }, // Set secure to true if you're using HTTPS
+  })
+);
 // console.log("------BLOG DEAL------")
 function ensureDir(directory) {
   return new Promise(function (resolve, reject) {
@@ -369,40 +379,40 @@ app.delete("/admin/users/:userId", authenticateToken, async (req, res) => {
 };
 generateOTP();
 // Endpoint for sending OTP to the user's email
-app.post('/send-otp', async (req, res) => {
+app.post("/send-otp", async (req, res) => {
   const { email } = req.body;
-  let otp=generateOTP().code;
-  const expiresAt=generateOTP().expiresAt;
+  req.session.email = email; // Store the email in the session
 
+  let otp = generateOTP().code;
+  const expiresAt = generateOTP().expiresAt;
 
   try {
     // Check if the user exists in the database
     const user = await credent.findOne({ email });
 
     if (!user) {
-      return res.status(404).json({ message: 'User not found.' });
+      return res.status(404).json({ message: "User not found." });
     }
 
     // Generate OTP
-  
     console.log("Generated OTP:", otp); // Log the generated OTP
 
     // Update user's OTP field in the database
     user.otp = otp;
-    user.verified=false;
+    user.verified = false;
     await user.save();
 
     // Send the OTP to the user's email (implement your email sending logic here)
     sendEmail(
       email,
-      'OTP for Password Reset',
+      "OTP for Password Reset",
       `Your OTP for password reset is: ${otp}`
     );
 
-    res.status(200).json({ message: 'OTP sent successfully.' });
+    res.status(200).json({ message: "OTP sent successfully." });
   } catch (error) {
     console.error(error);
-    res.status(500).json({ message: 'Internal Server Error' });
+    res.status(500).json({ message: "Internal Server Error" });
   }
 });
 
