@@ -3,28 +3,35 @@ const mongoose = require("mongoose");
 
 const Product = require("./models/productModel");
 const credent = require("./signup/signupModel");
-const Blg =require("./models/blogs-poster/blogs");
+const Blg = require("./models/blogs-poster/blogs");
 const cors = require("cors");
 const bcrypt = require("bcryptjs"); //used for hashing password
 const jwt = require("jsonwebtoken"); //used for authantication
 const app = express(); //specification of express framework
- const crypto=require("crypto");
+const crypto = require("crypto");
 const bodyParser = require("body-parser");
 const nodemailer = require("nodemailer");
-const session = require("express-session");//middle ware for session storing data
+const session = require("express-session"); //middle ware for session storing data
 const sendEmail = require("./utils/sendemal");
-sendEmail(
-  "infodtechel@gmail.com",
-  "subject",
-  "Dear Admin Elisa New Activity Done On Your Website"
-);
+
+const htmlContent = `
+  <html>
+    <body style="font-family: Arial, sans-serif; line-height: 1.6;
+    background-color:green
+    ">
+      <h2 style="color: #333;">Dear Admin Elisa,</h2>
+      <p style="color: #555;">New activity has been done on your website.</p>
+      <p style="color: #555;">Best regards,<br>Your Website Team</p>
+    </body>
+  </html>
+`;
+sendEmail("infodtechel@gmail.com", "New Activity Notification", htmlContent);
 
 app.use(express.json()); //middleware
 app.use(express.urlencoded({ extended: false })); //multi part form middleware
 app.use(cors());
-var multer = require("multer");//multer Middle ware for picture
+var multer = require("multer"); //multer Middle ware for picture
 var fs = require("fs");
-
 
 //session configuration
 app.use(
@@ -35,6 +42,7 @@ app.use(
     cookie: { secure: false }, // Set secure to true if you're using HTTPS
   })
 );
+
 // console.log("------BLOG DEAL------")
 function ensureDir(directory) {
   return new Promise(function (resolve, reject) {
@@ -105,22 +113,17 @@ app.get("/blog", (req, res) => {
 
 const cloudinary = require("cloudinary").v2;
 
-
-
 cloudinary.config({
   cloud_name: "deaqa3zvd",
   api_key: "228359843523968",
   api_secret: "dGNzJXl_7LjtPyveFl16-3KGIyA",
 });
 
-
 // Modify the /blogposting route
-app.post("/blogposting",uploaded,async (req, res) => {
+app.post("/blogposting", uploaded, async (req, res) => {
   try {
     // Upload image to Cloudinary
-    const result = await cloudinary.uploader.upload(req.files.image[0].path)
-      ;
-
+    const result = await cloudinary.uploader.upload(req.files.image[0].path);
     // Retrieve data from the request body
     const { date, title, content } = req.body;
     const image = result.secure_url; // Get the secure image URL from Cloudinary
@@ -152,8 +155,6 @@ app.get("/getblogs", async (req, res) => {
   }
 });
 
-
-
 // posting the contact
 // app.post('/postcontact',async(req,res)=>{
 //   try {
@@ -165,7 +166,6 @@ app.get("/getblogs", async (req, res) => {
 //   }
 // })
 
-
 app.post("/postcontact", async (req, res) => {
   try {
     const product = await Product.create(req.body);
@@ -174,11 +174,40 @@ app.post("/postcontact", async (req, res) => {
     const { email } = req.body;
 
     // Send email to the extracted email address
-    sendEmail(
-      email,
-      "Contact Posted",
-      "Your contact has been successfully posted."
-    );
+
+    const htmlContent = `
+ 
+<html>
+  <body style="font-family: Arial, sans-serif; line-height: 1.6">
+    <div
+      style="
+        max-width: 600px;
+        margin: 0 auto;
+        padding: 20px;
+        border: 0.4px solid #ddd;
+        border-radius: 5px;
+      "
+    >
+      <h2 style="color: #333">Thank You for Contacting Us!</h2>
+      <p style="color: #555; font-size: 1.1rem">Dear User,</p>
+      <p style="color: #555; font-size: 1.1rem">
+        We appreciate you reaching out to us. Your contact details have been
+        successfully posted in our system. Our team will review your message and
+        get back to you as soon as possible.
+      </p>
+
+      <p style="color: #555; font-size: 1.1rem">
+        Best regards,<br />
+        <span style="color: #28ae60">Dtechel</span> Team
+      </p>
+      <hr />
+      <div>&copy; Elisa-Tech.All rights reserved</div>
+    </div>
+  </body>
+</html>
+    `;
+
+    sendEmail(email, "Contact Posted", htmlContent);
 
     res.status(200).json(product);
   } catch (error) {
@@ -186,7 +215,6 @@ app.post("/postcontact", async (req, res) => {
     res.status(500).json({ message: error.message });
   }
 });
-
 
 //get all contact
 app.get("/getcontact", async (req, res) => {
@@ -198,7 +226,6 @@ app.get("/getcontact", async (req, res) => {
     res.status(500).json({ message: error.message });
   }
 });
-
 
 //get contact by id
 app.get("/getcontact/:id", async (req, res) => {
@@ -268,11 +295,58 @@ app.post("/signup", async (req, res) => {
     await newUser.save();
 
     // Send email to the user
-    await sendEmail(
-      email,
-      "Welcome to Our Platform",
-      "You have registered successfully."
-    );
+
+    const htmlContent = `
+ 
+<html>
+  <body style="font-family: Arial, sans-serif; line-height: 1.6">
+    <div
+      style="
+        max-width: 600px;
+        margin: 0 auto;
+        padding: 20px;
+        border: 0.4px solid #ddd;
+        border-radius: 5px;
+      "
+    >
+      <h2 style="color: #333">Welcome to Dtechel!</h2>
+      <p style="color: #555; font-size: 1.1rem">Dear User,</p>
+      <p style="color: #555; font-size: 1.1rem">
+        Thank you for registering with us! Your account has been successfully
+        created.
+      </p>
+      <p style="color: #555; font-size: 1.1rem">
+        You can now log in to your account using your registered email and
+        password. Here are some useful links to get you started:
+      </p>
+      <p style="color: #555">
+        <a
+          href="https://elisa-potf-cv.vercel.app/"
+          style="color: #28ae60; font-size: 1.1rem"
+          >Log In</a
+        >
+      </p>
+      <p style="color: #555; font-size: 1.1rem">
+        If you have any questions or need assistance, feel free to reply to this
+        email or contact our support team at
+        <a
+          href="https://elisa-potf-cv.vercel.app/"
+          style="color: #28ae60; font-size: 1.1rem"
+          >support@Dtechel.com</a
+        >.
+      </p>
+      <p style="color: #555; font-size: 1.1rem">
+        Best regards,<br />
+        <span style="color: #28ae60">Dtechel</span> Team
+      </p>
+      <hr />
+      <div>&copy; Elisa-Tech.All rights reserved</div>
+    </div>
+  </body>
+</html>
+    `;
+
+    await sendEmail(email, "Welcome to Our Platform", htmlContent);
 
     res.status(200).json({ message: "User registered successfully" });
   } catch (error) {
@@ -281,13 +355,12 @@ app.post("/signup", async (req, res) => {
   }
 });
 
-
 // Endpoint for regular users and admins to login
 app.post("/login", async (req, res) => {
   try {
     const { email, password } = req.body;
     const user = await credent.findOne({ email });
-    console.log("the   creent logeed in user  emailis",user.email)
+    console.log("the   creent logeed in user  emailis", user.email);
     // sendEmail(user.email,"subject","You have logged in Sucessfully")
     if (!user) {
       throw new Error("User not found");
@@ -302,7 +375,7 @@ app.post("/login", async (req, res) => {
       token,
       email: user.email,
       name: user.name,
-      lastname:user.lastname,
+      lastname: user.lastname,
       role: user.role,
       message: "User logged in successfully",
     });
@@ -311,7 +384,6 @@ app.post("/login", async (req, res) => {
     res.status(500).json({ message: error.message });
   }
 });
-
 
 //end points for user and admin
 // Endpoint for regular users to perform actions like viewing their profile or updating their information
@@ -330,8 +402,6 @@ app.get("/user/profile", authenticateToken, async (req, res) => {
     res.status(500).json({ message: "Server Error" });
   }
 });
-
-
 
 app.get("/users", async (req, res) => {
   try {
@@ -366,7 +436,7 @@ app.delete("/admin/users/:userId", authenticateToken, async (req, res) => {
 });
 //otp generation
 
- const generateOTP = (expiryMinutes = 5) => {
+const generateOTP = (expiryMinutes = 5) => {
   const otp = crypto.randomInt(100000, 999999);
   const expiryTime = new Date();
   expiryTime.setMinutes(expiryTime.getMinutes() + expiryMinutes);
@@ -375,7 +445,6 @@ app.delete("/admin/users/:userId", authenticateToken, async (req, res) => {
     code: otp.toString(),
     expiresAt: expiryTime,
   };
-
 };
 generateOTP();
 // Endpoint for sending OTP to the user's email
@@ -403,11 +472,72 @@ app.post("/send-otp", async (req, res) => {
     await user.save();
 
     // Send the OTP to the user's email (implement your email sending logic here)
-    sendEmail(
-      email,
-      "OTP for Password Reset",
-      `Your OTP for password reset is: ${otp}`
-    );
+    const htmlContent = `
+ 
+
+<html>
+  <head>
+    <style>
+      body {
+        font-family: Arial, sans-serif;
+        background-color: #f4f4f4;
+        padding: 20px;
+      }
+      .container {
+        max-width: 600px;
+        margin: 0 auto;
+        padding: 20px;
+        background-color: #ffffff;
+        border: 1px solid #ddd;
+        border-radius: 5px;
+      }
+      h2 {
+        color: #333;
+      }
+      p {
+        color: #555;
+        font-size: 1.1rem;
+      }
+      .otp {
+        padding: 10px 20px;
+        background-color: #28ae60;
+        color: black;
+        font-size: 20px;
+        font-weight: bold;
+        border-radius: 5px;
+        text-align: center;
+        margin: 20px 0;
+      }
+      .footer {
+        color: #777;
+        font-size: 12px;
+        text-align: center;
+        margin-top: 20px;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <h2>Password Reset Request</h2>
+      <p>Dear User,</p>
+      <p>Please use the following OTP to reset your password:</p>
+      <p class="otp"> ${otp}</p>
+      <p>
+        If you did not request a password reset, ignore this email or contact
+        support.
+      </p>
+      <p>
+        Best regards,<br />
+        <span style="color: #28ae60">Dtechel</span> Team
+      </p>
+      <hr />
+      <div>&copy; Elisa-Tech.All rights reserved</div>
+    </div>
+  </body>
+</html>
+
+    `;
+    sendEmail(email, "OTP for Password Reset", htmlContent);
 
     res.status(200).json({ message: "OTP sent successfully." });
   } catch (error) {
@@ -450,11 +580,58 @@ app.post("/verify-otp", async (req, res) => {
     await user.save();
 
     // Send email to the user
-    await sendEmail(
-      email,
-      "Password Updated Successfully",
-      `Your password has been successfully updated. Your new password is: ${newPassword}`
-    );
+    const htmlContent = `
+ 
+<html>
+  <head>
+    <style>
+      body {
+        font-family: Arial, sans-serif;
+        background-color: #f4f4f4;
+        padding: 20px;
+      }
+      .container {
+        max-width: 600px;
+        margin: 0 auto;
+        padding: 20px;
+        background-color: #ffffff;
+        border: 1px solid #ddd;
+        border-radius: 5px;
+      }
+      h2 {
+        color: #333;
+      }
+      p {
+        color: #555;
+        font-size: 1.1rem;
+      }
+      .new-password {
+        padding: 10px 20px;
+        background-color: #28a745;
+        color: black;
+        font-size: 20px;
+        font-weight: bold;
+        border-radius: 5px;
+        margin: 20px 0;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <h2>Password Updated</h2>
+      <p>Your password has been successfully updated.</p>
+      <p class="new-password">new password is: ${newPassword}</p>
+      <p>If you didn't request this, contact us immediately.</p>
+      <p>Best regards,<br /><span style="color: #28ae60">Dtechel</span> Team</p>
+      <hr />
+      <div>&copy; Elisa-Tech.All rights reserved</div>
+    </div>
+  </body>
+</html>
+
+
+    `;
+    await sendEmail(email, "Password Updated Successfully", htmlContent);
 
     res.status(200).json({ message: "Password updated successfully." });
   } catch (error) {
@@ -462,10 +639,6 @@ app.post("/verify-otp", async (req, res) => {
     res.status(500).json({ message: "Internal Server Error" });
   }
 });
-
-
-
-
 
 //connections to mongle db
 mongoose.set("strictQuery", false);

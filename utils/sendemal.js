@@ -13,20 +13,20 @@ const transporter = nodemailer.createTransport({
 });
 
 // Function to send email
-const sendEmail = async (to, subject, text) => {
+const sendEmail = async (to, subject, htmlContent) => {
   try {
     // Email configuration
     const mailOptions = {
       from: process.env.EMAIL_USER,
       to: to,
       subject: subject,
-      text: text,
+      html: htmlContent, // Use 'html' instead of 'text' for HTML content
     };
 
     // Send email
-    transporter.sendMail(mailOptions);
-    console.log("------------+", process.env.EMAIL_PASS);
- 
+    await transporter.sendMail(mailOptions);
+    console.log("Email sent successfully.");
+
     return true; // Return true if email is sent successfully
   } catch (error) {
     console.log("Error sending email: ", error.message);
@@ -35,3 +35,4 @@ const sendEmail = async (to, subject, text) => {
 };
 
 module.exports = sendEmail;
+
