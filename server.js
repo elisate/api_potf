@@ -17,11 +17,16 @@ const sendEmail = require("./utils/sendemal");
 const htmlContent = `
   <html>
     <body style="font-family: Arial, sans-serif; line-height: 1.6;
-    background-color:green
+  
     ">
       <h2 style="color: #333;">Dear Admin Elisa,</h2>
       <p style="color: #555;">New activity has been done on your website.</p>
-      <p style="color: #555;">Best regards,<br>Your Website Team</p>
+       <p>
+        Best regards,<br />
+        <span style="color: #28ae60">Dtechel</span> Team
+      </p>
+      <hr />
+      <div>&copy; Elisa-Tech.All rights reserved</div>
     </body>
   </html>
 `;
