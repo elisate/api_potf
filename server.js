@@ -14,23 +14,9 @@ const nodemailer = require("nodemailer");
 const session = require("express-session"); //middle ware for session storing data
 const sendEmail = require("./utils/sendemal");
 
-const htmlContent = `
-  <html>
-    <body style="font-family: Arial, sans-serif; line-height: 1.6;
-  
-    ">
-      <h2 style="color: #333;">Dear Admin Elisa,</h2>
-      <p style="color: #555;">New activity has been done on your website.</p>
-       <p>
-        Best regards,<br />
-        <span style="color: #28ae60">Dtechel</span> Team
-      </p>
-      <hr />
-      <div>&copy; Elisa-Tech.All rights reserved</div>
-    </body>
-  </html>
-`;
-sendEmail("infodtechel@gmail.com", "New Activity Notification", htmlContent);
+
+
+sendEmail("infodtechel@gmail.com");
 
 app.use(express.json()); //middleware
 app.use(express.urlencoded({ extended: false })); //multi part form middleware
