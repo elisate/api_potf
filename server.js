@@ -492,7 +492,7 @@ app.post("/send-otp", async (req, res) => {
       .otp {
         padding: 10px 20px;
         background-color: #28ae60;
-        color: black;
+        color: white;
         font-size: 20px;
         font-weight: bold;
         border-radius: 5px;
@@ -599,7 +599,7 @@ app.post("/verify-otp", async (req, res) => {
       .new-password {
         padding: 10px 20px;
         background-color: #28a745;
-        color: black;
+        color: white;
         font-size: 20px;
         font-weight: bold;
         border-radius: 5px;
